@@ -23,7 +23,7 @@ matchData = challonge.matches.index(tournament["id"])
 class Player:
     def __init__(self, tagData, playerID, placing):
         self.tag = tagData
-        self.ID = playerID
+        self.ids = [playerID]
         self.place = placing
         self.points = 1000.0 - ((placing - 1) * 31.25)
 
@@ -37,19 +37,27 @@ class Tournament:
         self.isPool = isPool
 
 #----------------------------------------------------------
-tournaments = []
+tournaments = [Tournament(participantsData, matchData, 123, False)]
 
-playerByTag = {}
+# Form a database of all players across tournaments used
+playersByTag = {}
 
 for t in tournaments:
     for pl in participantsData:
-        if not t.isPool:
-            playerByTag[pl['display-name']] = (Player(pl['display-name'][:-2], pl['id'], pl['final-rank']))
+        if pl['display-name'][:-2] not in playersByTag:
+            if not t.isPool:
+                playersByTag[pl['display-name'][:-2]] = (Player(pl['display-name'][:-2], pl['id'], pl['final-rank']))
+            else:
+                playersByTag[pl['display-name'][:-2]] = (Player(pl['display-name'][:-2], pl['id'], 33))
         else:
-            playerByTag[pl['display-name']] = (Player(pl['display-name'][:-2], pl['id'], 33))
-            
+            playersByTag[pl['display-name'][:-2]].ids.append(pl['id'])
+                         
 # Generate player pool - dict indexed by challonge id
 playerPool = {}
+
+for tag in playersByTag:
+    for pID in playersByTag[tag].ids:
+        playerPool[pID] = playersByTag[tag]
 
 # Loop through tournament matches, transferring points from loser to winner
 # based on match results
