@@ -61,17 +61,18 @@ for tag in playersByTag:
 
 # Loop through tournament matches, transferring points from loser to winner
 # based on match results
-for tm in matchData:
-    P1 = playerPool[tm['player1-id']]
-    P2 = playerPool[tm['player2-id']]
-    P1wins = int(tm['scores-csv'][0])
-    P2wins = int(tm['scores-csv'][-1])
+for tnmt in tournaments:
+    for tm in tnmt.matchData:
+        P1 = playerPool[tm['player1-id']]
+        P2 = playerPool[tm['player2-id']]
+        P1wins = int(tm['scores-csv'][0])
+        P2wins = int(tm['scores-csv'][-1])
 
-    P1PointsGained = .05 * P1wins * P2.points
-    P2PointsGained = .05 * P2wins * P1.points
+        P1PointsGained = .05 * P1wins * P2.points
+        P2PointsGained = .05 * P2wins * P1.points
 
-    P1.points += P1PointsGained - P2PointsGained
-    P2.points += P2PointsGained - P1PointsGained
+        P1.points += P1PointsGained - P2PointsGained
+        P2.points += P2PointsGained - P1PointsGained
 
 # Spit out players in sorted order
 
