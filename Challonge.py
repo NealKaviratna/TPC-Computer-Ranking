@@ -81,6 +81,10 @@ participantsData = challonge.participants.index(tournament["id"])
 matchData = challonge.matches.index(tournament["id"])
 tournaments.append(Tournament(participantsData, matchData, 123, True))
 
+tournament = challonge.tournaments.show("FBGT14DP")
+participantsData = challonge.participants.index(tournament["id"])
+matchData = challonge.matches.index(tournament["id"])
+tournaments.append(Tournament(participantsData, matchData, 123, True))
 #----------------------------------------------------------------------
 # Flashback 15
 tournament = challonge.tournaments.show("FBGT15")
@@ -134,6 +138,11 @@ matchData = challonge.matches.index(tournament["id"])
 tournaments.append(Tournament(participantsData, matchData, 123, True))
 
 tournament = challonge.tournaments.show("FBGT15p10")
+participantsData = challonge.participants.index(tournament["id"])
+matchData = challonge.matches.index(tournament["id"])
+tournaments.append(Tournament(participantsData, matchData, 123, True))
+
+tournament = challonge.tournaments.show("FBGT15DP")
 participantsData = challonge.participants.index(tournament["id"])
 matchData = challonge.matches.index(tournament["id"])
 tournaments.append(Tournament(participantsData, matchData, 123, True))
@@ -194,6 +203,11 @@ tournament = challonge.tournaments.show("FBGT16p10")
 participantsData = challonge.participants.index(tournament["id"])
 matchData = challonge.matches.index(tournament["id"])
 tournaments.append(Tournament(participantsData, matchData, 123, True))
+
+tournament = challonge.tournaments.show("FBGT16DP")
+participantsData = challonge.participants.index(tournament["id"])
+matchData = challonge.matches.index(tournament["id"])
+tournaments.append(Tournament(participantsData, matchData, 123, True))
 #----------------------------------------------------------------------
 # Form a database of all players across tournaments used
 playersByTag = {}
@@ -201,26 +215,68 @@ playersByTag = {}
 tournaments.sort(key=lambda x: x.isPool)
 
 for t in tournaments:
-    print t.isPool
     for pl in t.playerData:
         if pl['display-name'][:3] == 'BYE':
             if pl['display-name'] in playersByTag:
                 playersByTag[pl['display-name']].ids.append(pl['id'])
             else:
                 playersByTag[pl['display-name']] = (Player(pl['display-name'], pl['id'], 33))           
+
         elif t.isPool:
-            if pl['display-name'] in playersByTag:
-                playersByTag[pl['display-name']].ids.append(pl['id'])
+            tag = pl['display-name'].lower().replace('0', 'o')
+            tagSplit = tag.partition('| ');
+            if tagSplit[1] is not "":
+                tag = tagSplit[2]
+
+            # Hard coded solution for people with diff tags - temporary
+            if tag == "moonbucks":
+                tag = "jazz"
+            elif tag == "ddsdancedan":
+                tag = "dashdancedan"
+            elif tag == "the cool hat man":
+                tag = "avocado"
+            elif tag == "linkmastaflex":
+                tag = "flaminroy"
+            elif tag == "l3thal":
+                tag = "lethal"
+            elif tag == "bitch":
+                tag = "mahou man sam"
+            # -------------------------------------
+                
+            if tag in playersByTag:
+                playersByTag[tag].ids.append(pl['id'])
             else:
-                playersByTag[pl['display-name']] = (Player(pl['display-name'], pl['id'], 32))                
+                playersByTag[tag] = (Player(pl['display-name'], pl['id'], 32))                
+
         else:
-            if pl['display-name'][:-2] in playersByTag:
-                playersByTag[pl['display-name'][:-2]].ids.append(pl['id'])
+            tag = pl['display-name'][:-2].lower().replace('0', 'o')
+            tagSplit = tag.partition('| ');
+            if tagSplit[1] is not "":
+                tag = tagSplit[2]
+
+            # Hard coded solution for people with diff tags - temporary
+            if tag == "moonbucks":
+                tag = "jazz"
+            elif tag == "ddsdancedan":
+                tag = "dashdancedan"
+            elif tag == "the cool hat man":
+                print tag in playersByTag
+                tag = "avocado"
+            elif tag == "linkmastaflex":
+                tag = "flaminroy"
+            elif tag == "l3thal":
+                tag = "lethal"
+            elif tag == "bitch":
+                tag = "mahou man sam"
+            # -------------------------------------
+                
+            if tag in playersByTag:
+                playersByTag[tag].ids.append(pl['id'])
             else:
                 if pl['final-rank'] is None:
-                    playersByTag[pl['display-name'][:-2]] = (Player(pl['display-name'][:-2], pl['id'], -1))                
+                    playersByTag[tag] = (Player(pl['display-name'][:-2], pl['id'], -1))                
                 else:
-                    playersByTag[pl['display-name'][:-2]] = (Player(pl['display-name'][:-2], pl['id'], pl['final-rank']))                
+                    playersByTag[tag] = (Player(pl['display-name'][:-2], pl['id'], pl['final-rank']))                
                          
 # Generate player pool - dict indexed by challonge id
 playerPool = {}
@@ -237,11 +293,11 @@ for tnmt in tournaments:
             P1 = playerPool[tm['player1-id']]
             P2 = playerPool[tm['player2-id']]
 
-        if tm['scores-csv'] is not None and tm['scores-csv'][0] is not '-':
+        if tm['scores-csv'] is not None and len(tm['scores-csv']) <= 3:
             P1wins = int(tm['scores-csv'][0])
             P2wins = int(tm['scores-csv'][-1])
 
-            if P1wins >= 0 and P2wins >= 0 and len(tm['scores-csv']) <= 3:
+            if P1wins >= 0 and P2wins >= 0:
                 P1PointsGained = .05 * P1wins * P2.points
                 P2PointsGained = .05 * P2wins * P1.points
 
@@ -249,16 +305,13 @@ for tnmt in tournaments:
                 P2.points += P2PointsGained - P1PointsGained
                 
 # Spit out players in sorted order
-
 Results = []
-
 for tag in playersByTag:
-    Results.append([tag, playersByTag[tag].points])
-
+    Results.append([playersByTag[tag].tag, playersByTag[tag].points])
 
 SortedResults = sorted(Results, key=itemgetter(1), reverse=True)
 
 
 for idx, result in enumerate(SortedResults):
-    print idx+1, result[0], result[1]
+    print idx+1, '\t', result[0], '\t', result[1]
     
